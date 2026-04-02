@@ -4,6 +4,10 @@ import { useApp } from '../context/AppContext';
 import Loader from '../components/Loader';
 import ErrorBlock from '../components/ErrorBlock';
 
+const allowedProtocols = [
+  'HTTP', 'HTTPS', 'DNS', 'SS7', 'SIP', 'SMTP', 'FTP', 'SSH', 'TELNET', 'SNMP'
+];
+
 function Create() {
   const nav = useNavigate();
   const { addItem, loading, err, clearErr } = useApp();
@@ -19,6 +23,7 @@ function Create() {
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [validating, setValidating] = useState(false);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -30,20 +35,37 @@ function Create() {
 
   function validate() {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Обязательное поле';
-    else if (form.name.length < 3) errs.name = 'Минимум 3 символа';
 
-    if (!form.desc.trim()) errs.desc = 'Обязательное поле';
-    else if (form.desc.length < 10) errs.desc = 'Минимум 10 символов';
+    if (!form.name.trim()) {
+      errs.name = 'Обязательное поле';
+    } else if (form.name.length < 3) {
+      errs.name = 'Минимум 3 символа';
+    }
 
-    if (!form.protocol.trim()) errs.protocol = 'Укажите протокол';
+    if (!form.desc.trim()) {
+      errs.desc = 'Обязательное поле';
+    } else if (form.desc.length < 10) {
+      errs.desc = 'Минимум 10 символов';
+    }
 
-    if (!form.date) errs.date = 'Укажите дату';
-    else {
+    if (!form.protocol.trim()) {
+      errs.protocol = 'Укажите протокол';
+    } else {
+      const upperProtocol = form.protocol.trim().toUpperCase();
+      if (!allowedProtocols.includes(upperProtocol)) {
+        errs.protocol = 'Допустимые протоколы: ' + allowedProtocols.join(', ');
+      }
+    }
+
+    if (!form.date) {
+      errs.date = 'Укажите дату';
+    } else {
       const d = new Date(form.date);
       const today = new Date();
       today.setHours(23, 59, 59, 999);
-      if (d > today) errs.date = 'Дата не может быть в будущем';
+      if (d > today) {
+        errs.date = 'Дата не может быть в будущем';
+      }
     }
 
     setFieldErrors(errs);
@@ -52,7 +74,13 @@ function Create() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!validate()) return;
+
+    setValidating(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const isValid = validate();
+    setValidating(false);
+
+    if (!isValid) return;
 
     setSaving(true);
     const ok = await addItem(form);
@@ -61,8 +89,8 @@ function Create() {
     if (ok) nav('/list');
   }
 
-  if (saving || loading) {
-    return <Loader text="Сохранение..." />;
+  if (saving || loading || validating) {
+    return <Loader />;
   }
 
   return (
@@ -138,8 +166,8 @@ function Create() {
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn save" disabled={saving}>
-            {saving ? 'Сохранение...' : 'Сохранить'}
+          <button type="submit" className="btn save" disabled={saving || validating}>
+            {saving ? 'Сохранение...' : validating ? 'Проверка...' : 'Сохранить'}
           </button>
           <Link to="/list" className="btn cancel">
             Отмена

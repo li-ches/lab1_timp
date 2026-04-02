@@ -4,6 +4,10 @@ import { useApp } from '../context/AppContext';
 import Loader from '../components/Loader';
 import ErrorBlock from '../components/ErrorBlock';
 
+const allowedProtocols = [
+  'HTTP', 'HTTPS', 'DNS', 'SS7', 'SIP', 'SMTP', 'FTP', 'SSH', 'TELNET', 'SNMP'
+];
+
 function Change() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -40,13 +44,27 @@ function Change() {
 
   function validate() {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Обязательное поле';
-    else if (form.name.length < 3) errs.name = 'Минимум 3 символа';
 
-    if (!form.desc.trim()) errs.desc = 'Обязательное поле';
-    else if (form.desc.length < 10) errs.desc = 'Минимум 10 символов';
+    if (!form.name.trim()) {
+      errs.name = 'Обязательное поле';
+    } else if (form.name.length < 3) {
+      errs.name = 'Минимум 3 символа';
+    }
 
-    if (!form.protocol.trim()) errs.protocol = 'Укажите протокол';
+    if (!form.desc.trim()) {
+      errs.desc = 'Обязательное поле';
+    } else if (form.desc.length < 10) {
+      errs.desc = 'Минимум 10 символов';
+    }
+
+    if (!form.protocol.trim()) {
+      errs.protocol = 'Обязательное поле';
+    } else {
+      const upperProtocol = form.protocol.trim().toUpperCase();
+      if (!allowedProtocols.includes(upperProtocol)) {
+        errs.protocol = 'Допустимые протоколы: ' + allowedProtocols.join(', ');
+      }
+    }
 
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
@@ -64,7 +82,7 @@ function Change() {
   }
 
   if (loading && !form) {
-    return <Loader text="Загрузка данных..." />;
+    return <Loader />;
   }
 
   if (notFound || (err && !form)) {

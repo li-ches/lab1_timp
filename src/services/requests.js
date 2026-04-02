@@ -3,11 +3,19 @@ import axios from 'axios';
 const url = 'http://localhost:5000/attacks';
 
 function getAll() {
-  return axios.get(url);
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(axios.get(url));
+    }, 5000);
+  });
 }
 
 function getOne(id) {
-  return axios.get(url + '/' + id);
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(axios.get(url + '/' + id));
+    }, 5000);
+  });
 }
 
 function create(data) {

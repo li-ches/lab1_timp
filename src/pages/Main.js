@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Loader from '../components/Loader';
 import ErrorBlock from '../components/ErrorBlock';
+import Statistics from '../components/Statistics';
 
 function Main() {
   const { items, loading, err, loadAll, clearErr } = useApp();
@@ -12,7 +13,7 @@ function Main() {
   }, []);
 
   if (loading && items.length === 0) {
-    return <Loader text="Загрузка данных..." />;
+    return <Loader />;
   }
 
   const active = items.filter(x => x.status === 'Активна').length;
@@ -50,6 +51,8 @@ function Main() {
           <span>Внутренних</span>
         </div>
       </div>
+
+      <Statistics attacks={items} />
 
       <div className="last">
         <h3>Последние атаки</h3>
